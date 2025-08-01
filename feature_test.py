@@ -3,17 +3,16 @@ import argparse
 import requests 
 import os
 from dotenv import load_dotenv
-import wikipediaapi
+import wikipediaapi # We need this library again
+import sys # To check for command-line arguments
 
-# Load environment variables from the .env file
+# Load environment variables
 load_dotenv()
 
-# --- Feature Functions ---
-# These are the functions that perform the actual tasks.
-
-def fast_search(query, api_key):
+# --- Function for Mode 1: Fast AI Summary ---
+def get_ai_summary(query, api_key):
     """
-    MODE 1: Uses the Gemini AI to directly answer a user's query.
+    Uses the Gemini AI to directly answer a user's query.
     """
     print(f"-> Asking Gemini for a quick summary of: '{query}'...")
     prompt = (
@@ -34,11 +33,12 @@ def fast_search(query, api_key):
         print(f"An error occurred: {e}")
 
 
-def structured_search(query, api_key):
+# --- Functions for Mode 2: Structured Wikipedia Search ---
+def get_optimized_search_term(query, api_key):
     """
-    MODE 2: Uses AI to optimize a search term and then searches Wikipedia.
+    Uses the Gemini AI to convert a natural language query
+    into an optimal Wikipedia search term.
     """
-    # Step 1: Optimize the search term using Gemini AI
     print(f"-> Optimizing search term with AI...")
     prompt = (
         f"Based on the following user query, what is the best possible search term for Wikipedia? "
@@ -55,18 +55,21 @@ def structured_search(query, api_key):
         data = response.json()
         optimized_term = data['candidates'][0]['content']['parts'][0]['text'].strip()
         print(f"-> AI suggested search term: '{optimized_term}'")
+        return optimized_term
     except Exception as e:
         print(f"An error occurred during optimization: {e}")
-        print("-> Using original query for search.")
-        optimized_term = query
+        return query
 
-    # Step 2: Search Wikipedia with the optimized term
-    print(f"-> Searching Wikipedia for '{optimized_term}'...")
+def get_structured_wiki_answer(query):
+    """
+    Searches Wikipedia for a given query and prints a structured summary.
+    """
+    print(f"-> Searching Wikipedia for '{query}'...")
     wiki_wiki = wikipediaapi.Wikipedia(user_agent='Mark-I-Assistant/1.0', language='en')
-    page = wiki_wiki.page(optimized_term)
+    page = wiki_wiki.page(query)
 
     if not page.exists():
-        print(f"Sorry, I could not find a Wikipedia page for '{optimized_term}'.")
+        print(f"Sorry, I could not find a Wikipedia page for '{query}'.")
         return
 
     print(f"\n--- Result for: {page.title} ---")
@@ -74,48 +77,27 @@ def structured_search(query, api_key):
     print(". ".join(summary_sentences[:3]) + ".")
 
 
-# --- Main Controller ---
-def main():
-    """
-    The main function that parses commands and calls the correct feature.
-    """
-    parser = argparse.ArgumentParser(description="Mark I: Your Personal AI Assistant.")
-    
-    # We create a group that ensures only ONE of these arguments can be used at a time.
-    group = parser.add_mutually_exclusive_group(required=True)
-    
-    # Define the --search command
-    group.add_argument(
-        '--search', 
-        type=str, 
-        nargs='+', 
-        help="Perform a structured, fact-checked search using Wikipedia."
-    )
-    
-    # Define the --fast-search command
-    group.add_argument(
-        '--fast-search', 
-        type=str, 
-        nargs='+', 
-        help="Get a quick AI-generated summary directly."
-    )
-
-    args = parser.parse_args()
-    
+# --- Main Program Logic ---
+if __name__ == "__main__":
     gemini_api_key = os.getenv("GEMINI_API_KEY")
     if not gemini_api_key:
         print("Error: GEMINI_API_KEY not found in .env file.")
-        return
+    
+    # NEW: Check if command-line arguments were provided
+    # len(sys.argv) will be 1 if only the script name is present.
+    if len(sys.argv) > 1:
+        # --- MODE 1: Fast AI Summary (Arguments Provided) ---
+        parser = argparse.ArgumentParser(description="Get a fast AI-generated summary.")
+        parser.add_argument("query", type=str, nargs='+', help="The question you want to ask.")
+        args = parser.parse_args()
+        user_query = " ".join(args.query)
+        get_ai_summary(user_query, gemini_api_key)
+    else:
+        # --- MODE 2: Structured Search (No Arguments) ---
+        # REMOVED the while loop for a single execution.
+        print("--- Interactive Structured Search Mode ---")
+        user_query = input("Ask a question to get a fact-checked summary from Wikipedia: ")
+        if user_query:
+            optimized_term = get_optimized_search_term(user_query, gemini_api_key)
+            get_structured_wiki_answer(optimized_term)
 
-    # --- Command Dispatcher ---
-    # Check which command was used and call the appropriate function.
-    if args.search:
-        query = " ".join(args.search)
-        structured_search(query, gemini_api_key)
-    elif args.fast_search:
-        query = " ".join(args.fast_search)
-        fast_search(query, gemini_api_key)
-
-
-if __name__ == "__main__":
-    main()
