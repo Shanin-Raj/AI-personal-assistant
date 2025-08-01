@@ -4,12 +4,13 @@ import requests
 import os
 from dotenv import load_dotenv
 import wikipediaapi
+import speech_recognition as sr # NEW: Import speech recognition
 
 # Load environment variables from the .env file
 load_dotenv()
 
 # --- Feature Functions ---
-# These are the functions that perform the actual tasks.
+# (These functions: fast_search and structured_search remain the same)
 
 def fast_search(query, api_key):
     """
@@ -38,7 +39,6 @@ def structured_search(query, api_key):
     """
     MODE 2: Uses AI to optimize a search term and then searches Wikipedia.
     """
-    # Step 1: Optimize the search term using Gemini AI
     print(f"-> Optimizing search term with AI...")
     prompt = (
         f"Based on the following user query, what is the best possible search term for Wikipedia? "
@@ -60,7 +60,6 @@ def structured_search(query, api_key):
         print("-> Using original query for search.")
         optimized_term = query
 
-    # Step 2: Search Wikipedia with the optimized term
     print(f"-> Searching Wikipedia for '{optimized_term}'...")
     wiki_wiki = wikipediaapi.Wikipedia(user_agent='Mark-I-Assistant/1.0', language='en')
     page = wiki_wiki.page(optimized_term)
@@ -73,32 +72,61 @@ def structured_search(query, api_key):
     summary_sentences = page.summary.split('.')
     print(". ".join(summary_sentences[:3]) + ".")
 
+# ---  Voice Command Functions ---
+
+def listen_for_command():
+    """
+    Listens for a command from the microphone and returns the recognized text.
+    """
+    r = sr.Recognizer()
+    with sr.Microphone() as source:
+        print("Calibrating microphone...")
+        r.adjust_for_ambient_noise(source, duration=1)
+        print("Awaiting your command...")
+        try:
+            audio = r.listen(source, timeout=5, phrase_time_limit=10)
+            print("Recognizing...")
+            text = r.recognize_google(audio)
+            print(f"-> You said: '{text}'")
+            return text.lower() # Return text in lowercase for easier processing
+        except sr.WaitTimeoutError:
+            print("Timeout: No command was heard.")
+            return None
+        except sr.UnknownValueError:
+            print("Sorry, I could not understand the audio.")
+            return None
+        except sr.RequestError as e:
+            print(f"API Error: {e}")
+            return None
+
+def process_voice_command(command, api_key):
+    """
+    Analyzes the recognized text and calls the appropriate function.
+    """
+    if command is None:
+        return
+
+    # A simple way to check for keywords in the command
+    if "fast search" in command:
+        # We remove the keywords to get the actual query
+        query = command.replace("fast search", "").strip()
+        fast_search(query, api_key)
+    elif "search" in command:
+        query = command.replace("search", "").strip()
+        structured_search(query, api_key)
+    else:
+        print("Sorry, I didn't recognize that command. Please say 'search' or 'fast search'.")
+
 
 # --- Main Controller ---
 def main():
-    """
-    The main function that parses commands and calls the correct feature.
-    """
     parser = argparse.ArgumentParser(description="Mark I: Your Personal AI Assistant.")
-    
-    # We create a group that ensures only ONE of these arguments can be used at a time.
     group = parser.add_mutually_exclusive_group(required=True)
     
-    # Define the --search command
-    group.add_argument(
-        '--search', 
-        type=str, 
-        nargs='+', 
-        help="Perform a structured, fact-checked search using Wikipedia."
-    )
-    
-    # Define the --fast-search command
-    group.add_argument(
-        '--fast-search', 
-        type=str, 
-        nargs='+', 
-        help="Get a quick AI-generated summary directly."
-    )
+    group.add_argument('--search', type=str, nargs='+', help="Perform a structured search.")
+    group.add_argument('--fast-search', type=str, nargs='+', help="Get a quick AI summary.")
+    # NEW: Add the --listen command. 'action='store_true'' means it doesn't need a value.
+    group.add_argument('--listen', action='store_true', help="Listen for a voice command.")
 
     args = parser.parse_args()
     
@@ -108,13 +136,16 @@ def main():
         return
 
     # --- Command Dispatcher ---
-    # Check which command was used and call the appropriate function.
     if args.search:
         query = " ".join(args.search)
         structured_search(query, gemini_api_key)
     elif args.fast_search:
         query = " ".join(args.fast_search)
         fast_search(query, gemini_api_key)
+    elif args.listen:
+        #  If --listen is used, call the voice processing functions
+        command = listen_for_command()
+        process_voice_command(command, gemini_api_key)
 
 
 if __name__ == "__main__":
