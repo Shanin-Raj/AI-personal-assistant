@@ -1,7 +1,7 @@
 # Project S.H.A.N.I.N. - Mark I Release
 
 This repository contains the code for the Mark I version of my personal AI assistant, S.H.A.N.I.N.  
-A semester-long project to build an intelligent assistant from the ground up, integrating new technologies with each version.
+A Years-long project to build an intelligent assistant from the ground up, integrating new technologies with each version.
 
 ---
 
