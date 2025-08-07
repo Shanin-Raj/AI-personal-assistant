@@ -1,36 +1,40 @@
-# Project Mark I: AI Personal Assistant
+# Project S.H.A.N.I.N. - Mark I Release
 
-This repository contains the code for **"Mark I"**, a personal command-line assistant built with Python. This project is a semester-long endeavor to build an intelligent assistant from the ground up, learning and integrating new technologies with each new version ("Mark").
+This repository contains the code for the Mark I version of my personal AI assistant, S.H.A.N.I.N.  
+A semester-long project to build an intelligent assistant from the ground up, integrating new technologies with each version.
 
 ---
 
-## Current Features
+## Core Features
 
-### Dual Search Modes
-- **--search**: Structured search mode that uses AI to optimize a user's query and retrieves a factual summary from Wikipedia.
-- **--fast-search**: Quick search mode that uses the Gemini AI to provide a direct, concise summary for any question.
+- **Voice-Controlled Interface**  
+  Interact with the assistant using voice commands. It listens, understands your intent, and responds with synthesized speech.
 
-### Voice Command Interface
-- **--listen**: Activates the microphone to allow the user to speak their commands (e.g., "search what is an array in C").
+- **Intelligent Search**
+  - **Fact-Checked Answers:** Optimizes your question for Wikipedia and provides a structured, factual summary.
+  - **Quick Summaries:** Uses Gemini AI to provide fast, direct answers for any query.
+  - **News Briefing:** Fetches the latest news headlines for a country and delivers a concise, AI-powered summary.
+
+- **Personal Note-Taking**
+  - **Add Notes:** Save personal notes with a timestamp using a simple voice command.
+  - **View Notes:** Display all your saved notes in the terminal.
 
 ---
 
 ## Technologies Used
 
-- **Language**: Python 3
+- **Language:** Python 3
 
-### Core Libraries
-- `argparse`: For parsing command-line arguments.
-- `requests`: For making API calls.
-- `python-dotenv`: For secure management of API keys.
+- **AI & APIs:**
+  - Intent Recognition: Google Gemini API
+  - Information Retrieval: Wikipedia-API, GNews API
+  - Voice Recognition: SpeechRecognition library
+  - Text-to-Speech: gTTS (Google Text-to-Speech) library
 
-### Voice & AI
-- `SpeechRecognition`: To capture and convert microphone audio to text.
-- `PyAudio`: As a dependency for microphone access.
-
-### APIs
-- Google Gemini API
-- Wikipedia-API
+- **Core Libraries:**
+  - `requests`: For API communication
+  - `python-dotenv`: For secure management of API keys
+  - `playsound`: To play audio responses
 
 ---
 
@@ -44,49 +48,40 @@ This repository contains the code for **"Mark I"**, a personal command-line assi
 
 2. **Install the required libraries:**
     ```sh
-    pip install requests python-dotenv wikipedia-api SpeechRecognition PyAudio
+    pip install requests python-dotenv wikipedia-api SpeechRecognition PyAudio gTTS playsound==1.2.2
     ```
 
-3. **Create your `.env` file:**
-    - Create a file named `.env` in the main project folder and add your Gemini API key:
-      ```
-      GEMINI_API_KEY=YOUR_GEMINI_KEY_HERE
-      ```
+3. **Create your `.env` file:**  
+   In the main project folder, add your API keys:
+    ```
+    GEMINI_API_KEY=YOUR_GEMINI_KEY_HERE
+    NEWS_API_KEY=YOUR_GNEWS_KEY_HERE
+    ```
 
-4. **Run a command:**
-    - **Text Search:**
-      ```sh
-      python mark_one.py --search "your query here"
-      ```
-    - **Fast AI Search:**
-      ```sh
-      python mark_one.py --fast-search "your query here"
-      ```
-    - **Voice Command:**
-      ```sh
-      python mark_one.py --listen
-      ```
-      Then, say your command (e.g., "search for the history of Python").
+4. **Run the assistant:**  
+   The assistant starts in voice mode automatically.
+    ```sh
+    python mark_one.py
+    ```
+
+5. **Example Commands:**  
+   After the prompt, you can say:
+   - "What are today's top news headlines?"
+   - "Search for the history of the C programming language."
+   - "Add a note."
 
 ---
 
-## Project Development History
+## Project Roadmap
 
-This project is being built in phases, with each "Mark" representing a new set of capabilities.
+This project is built in phases, with each "Mark" representing new capabilities.
 
-- **Mark I: The Foundation (Completed)**
-    - Initial project setup and repository creation.
-    - Implementation of a robust command-line argument parser.
+- **Mark I: The Information Assistant (Completed ✅)**
+  - Initial project setup and command-line structure
+  - Integrated APIs for search (Gemini, Wikipedia) and news (GNews)
+  - Full voice-controlled interface (Speech-to-Text and Text-to-Speech)
+  - Personal productivity features like note-taking
 
-- **Mark II: The Search Module (Completed)**
-    - Added dual search modes (`--search` and `--fast-search`).
-    - Integrated Google Gemini and Wikipedia APIs.
-    - Implemented voice command interface using the `--listen` command.
-
-- **Mark III: The Information Hub (Upcoming)**
-    - News Summaries: Add a command to fetch and summarize top news headlines.
-    - Note-Taking: Implement commands to add and view personal notes.
-
-- **Mark IV: The Vision System (Upcoming)**
-    - Webcam Access: Integrate OpenCV to access the system's webcam.
-    - Basic Monitoring: Implement a simple security feature to detect faces in the camera feed.
+- **The Vision System (Upcoming)**
+  - Webcam Access: Integrate OpenCV to access the system's webcam
+  - Basic Monitoring: Implement a simple security feature to detect faces in the camera feed
