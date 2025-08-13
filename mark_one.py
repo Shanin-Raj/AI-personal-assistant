@@ -1,31 +1,34 @@
 # Import all necessary libraries
-import argparse
-import requests 
-import os                          # For file operations
-from dotenv import load_dotenv     # For loading environment variables
-import wikipediaapi                # For Wikipedia searches
-import speech_recognition as sr    # For voice recognition
-import json                        # For JSON handling
-from datetime import datetime      # For timestamping notes
-from gtts import gTTS              # For text-to-speech
-from playsound import playsound    # For playing audio files
+import argparse                     # Command-line argument parsing
+import requests                    # HTTP requests for API calls
+import os                          # Operating system interactions (e.g., file handling)
+from dotenv import load_dotenv     # Load environment variables from .env file
+import wikipediaapi                 # Wikipedia API for fetching articles
+import speech_recognition as sr     # Speech recognition for voice commands     
+import json                         # JSON handling for structured data
+from datetime import datetime       # Date and time handling for notes
+from gtts import gTTS                # Google Text-to-Speech for converting text to speech
+from playsound import playsound      # Play sound files  
+
 
 # Load environment variables from the .env file
 load_dotenv()
 
 # --- Text-to-Speech Function ---
-def speak(text, tld='co.uk', filename="response.mp3"): 
+def speak(text, tld='co.uk', filename="response.mp3"):
     """Converts a string of text into speech and plays it."""
     try:
-        # Clean the text by removing any special characters that might cause issues
+        # Clean the text to remove markdown for better speech quality.
         clean_text = text.replace('*', '').replace('#', '')
 
         print("-> Converting text to speech...")
-        # Pass the tld to gTTS to change the accent
+        # Use the cleaned text to generate the audio
         tts = gTTS(text=clean_text, lang='en', tld=tld)
         tts.save(filename)
+        
         print("-> Speaking...")
         playsound(filename)
+        
         os.remove(filename) # Clean up the audio file
     except Exception as e:
         print(f"An error occurred in the text-to-speech function: {e}")
@@ -35,7 +38,8 @@ def speak(text, tld='co.uk', filename="response.mp3"):
 def fast_search(query, api_key):
     """Uses the Gemini AI to directly answer a user's query."""
     print(f"-> Asking Gemini for a quick summary of: '{query}'...")
-    prompt = (f"Please provide a concise summary that directly answers the following query.It should be presented in a neat way.\nQuery: '{query}'")
+    prompt = (f"Please provide a concise summary that directly answers the following query. "
+              f"Present the answer as a neat, bulleted list.\nQuery: '{query}'")
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key={api_key}"
     payload = {"contents": [{"parts": [{"text": prompt}]}]}
     headers = {'Content-Type': 'application/json'}
@@ -45,7 +49,7 @@ def fast_search(query, api_key):
         data = response.json()
         summary = data['candidates'][0]['content']['parts'][0]['text'].strip()
         print(f"\n--- AI Generated Summary ---\n{summary}")
-        speak(summary) # Speak the result
+        speak(summary)
     except Exception as e:
         error_message = f"An error occurred: {e}"
         print(error_message)
@@ -83,7 +87,7 @@ def structured_search(query, api_key):
     summary_sentences = page.summary.split('.')
     result_summary = ". ".join(summary_sentences[:3]) + "."
     print(f"\n--- Result for: {page.title} ---\n{result_summary}")
-    speak(result_title + " " + result_summary) # Speak the result
+    speak(result_title + " " + result_summary)
 
 def get_news_summary(gemini_api_key, news_api_key, country='in'):
     """Fetches top headlines from GNews and uses Gemini to summarize them."""
@@ -108,7 +112,9 @@ def get_news_summary(gemini_api_key, news_api_key, country='in'):
 
     print("-> Summarizing headlines with AI...")
     headlines_text = "\n".join(headlines)
-    prompt = (f"You are a news anchor. Based on the following headlines, provide a concise and neat summary of today's top news in  bulleted list, with each point summarizing one key event.\n\nHeadlines:\n{headlines_text}")
+    prompt = (f"You are a news anchor. Based on the following headlines, provide a summary of today's top news. "
+              f"Present the summary as a neat, bulleted list, with each point summarizing one key event.\n\n"
+              f"Headlines:\n{headlines_text}")
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key={gemini_api_key}"
     payload = {"contents": [{"parts": [{"text": prompt}]}]}
     headers = {'Content-Type': 'application/json'}
@@ -118,7 +124,7 @@ def get_news_summary(gemini_api_key, news_api_key, country='in'):
         data = response.json()
         summary = data['candidates'][0]['content']['parts'][0]['text'].strip()
         print(f"\n--- Today's News Summary ---\n{summary}")
-        speak("Here is a summary of today's top news. " + summary) # Speak the result
+        speak("Here is a summary of today's top news. " + summary)
     except Exception as e:
         error_message = f"An error occurred during summarization: {e}"
         print(error_message)
@@ -131,7 +137,7 @@ def add_note(note_text):
         file.write(f"[{timestamp}] {note_text}\n")
     success_message = "Note saved successfully."
     print(f"-> {success_message}")
-    speak(success_message) # Speak the confirmation
+    speak(success_message)
 
 def view_notes():
     """Reads and prints all notes from the notes.txt file."""
@@ -142,7 +148,6 @@ def view_notes():
                 print("\n--- Your Notes ---")
                 print(notes)
                 speak("Here are your notes.")
-                # We don't speak the full notes as it could be long.
             else:
                 no_notes_message = "You don't have any notes yet."
                 print(no_notes_message)
@@ -160,6 +165,7 @@ def listen_for_command(prompt="Awaiting your command..."):
     with sr.Microphone() as source:
         print(prompt)
         r.adjust_for_ambient_noise(source, duration=0.5)
+        print("-> Listening for your command...")
         try:
             audio = r.listen(source, timeout=5, phrase_time_limit=10)
             print("Recognizing...")
@@ -220,7 +226,7 @@ def main():
         return
 
     # Greet the user with voice
-    speak("Mark I online sir. How can I help you ?")
+    speak("S.H.A.N.I.N. Mark I online. How can I help you?")
 
     command_text = listen_for_command()
     
@@ -249,3 +255,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
