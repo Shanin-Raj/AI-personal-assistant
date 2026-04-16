@@ -82,6 +82,8 @@ This project is built in phases, with each "Mark" representing new capabilities.
   - Full voice-controlled interface (Speech-to-Text and Text-to-Speech)
   - Personal productivity features like note-taking
 
-- **The Vision System (Upcoming)**
-  - Webcam Access: Integrate OpenCV to access the system's webcam
-  - Basic Monitoring: Implement a simple security feature to detect faces in the camera feed
+- **Mark II: The Vision System (In Progress - Branch: `MarkII-base`)**
+  - The new Mark II base and vision system components are currently available in the `MarkII-base` branch.
+  - Face capture and dataset generation using OpenCV.
+  - Model training for custom facial recognition.
+  - Real-time webcam face recognition and basic monitoring.
